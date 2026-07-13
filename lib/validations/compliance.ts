@@ -17,6 +17,11 @@ export const referenceSchema = z.object({
   notes: z.string().default(""),
 });
 
+export const employerDetailSchema = z.object({
+  id: z.string().uuid().optional(),
+  name: z.string().min(1, "Employer name is required"),
+});
+
 export const previousCompanySchema = z.object({
   id: z.string().uuid().optional(),
   company_name: z.string().min(2, "Company name is required"),
@@ -43,6 +48,10 @@ export const complianceRecordSchema = z.object({
   status: z.enum(recordStatuses).optional(),
   rejection_reason: z.string().optional(),
   previous_companies: z.array(previousCompanySchema).min(1, "Add at least one previous company"),
+  // Flat references list (separate from companies in the UI)
+  flat_references: z.array(referenceSchema).default([]),
+  // Employer details — admin-managed, name only
+  employer_details: z.array(employerDetailSchema).default([]),
 });
 
 export const reviewReferenceSchema = z.object({
@@ -55,3 +64,4 @@ export const reviewReferenceSchema = z.object({
 
 export type ComplianceRecordSchema = z.infer<typeof complianceRecordSchema>;
 export type ReviewReferenceSchema = z.infer<typeof reviewReferenceSchema>;
+export type EmployerDetailSchema = z.infer<typeof employerDetailSchema>;

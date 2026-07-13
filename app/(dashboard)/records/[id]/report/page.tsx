@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Pencil, ShieldCheck } from "lucide-react";
+import { Pencil } from "lucide-react";
 
 import { PageHeader } from "@/components/layout/page-header";
 import { ComplianceReportView } from "@/components/report/compliance-report-view";
@@ -34,12 +34,6 @@ export default async function ReportPage({
                 <Link href={`/records/${record.id}/edit`}>
                   <Pencil className="size-4 mr-2" />
                   Edit Full Record
-                </Link>
-              </Button>
-              <Button asChild variant="secondary" size="sm">
-                <Link href={`/records/${record.id}/review`}>
-                  <ShieldCheck className="size-4 mr-2" />
-                  Add/Edit References
                 </Link>
               </Button>
             </div>

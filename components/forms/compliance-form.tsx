@@ -5,19 +5,20 @@ import {
   Controller,
   useFieldArray,
   useForm,
-  type Control,
-  type UseFormRegister,
 } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AnimatePresence, motion } from "framer-motion";
 import {
+  Briefcase,
   CheckCircle2,
+  Contact,
   Layers,
   ListChecks,
   Plus,
   Save,
   ShieldCheck,
   Trash2,
+  UserRound,
   XCircle,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -57,6 +58,22 @@ export function ComplianceForm({
   );
   const [isPending, startTransition] = useTransition();
 
+  // Collect all references flat from existing companies
+  const existingFlatRefs = useMemo(() => {
+    if (!record?.previous_companies) return [];
+    return record.previous_companies.flatMap((company) =>
+      (company.references ?? []).map((ref) => ({
+        id: ref.id,
+        previous_company_id: ref.previous_company_id,
+        reference_name: ref.reference_name ?? "",
+        designation: ref.designation ?? "",
+        email: ref.email ?? "",
+        phone: ref.phone ?? "",
+        notes: ref.notes ?? "",
+      })),
+    );
+  }, [record]);
+
   const defaultValues = useMemo<ComplianceRecordSchema>(
     () => ({
       id: record?.id,
@@ -80,15 +97,7 @@ export function ComplianceForm({
         employment_start: company.employment_start,
         employment_end: company.employment_end,
         display_order: company.display_order ?? index,
-        references: (company.references ?? []).map((ref) => ({
-          id: ref.id,
-          previous_company_id: ref.previous_company_id,
-          reference_name: ref.reference_name ?? "",
-          designation: ref.designation ?? "",
-          email: ref.email ?? "",
-          phone: ref.phone ?? "",
-          notes: ref.notes ?? "",
-        })),
+        references: [],
       })) ?? [
         {
           company_name: "",
@@ -99,8 +108,10 @@ export function ComplianceForm({
           references: [],
         },
       ],
+      flat_references: existingFlatRefs,
+      employer_details: [],
     }),
-    [record],
+    [record, existingFlatRefs],
   );
 
   const form = useForm<ComplianceRecordSchema>({
@@ -111,6 +122,16 @@ export function ComplianceForm({
   const companies = useFieldArray({
     control: form.control,
     name: "previous_companies",
+  });
+
+  const flatReferences = useFieldArray({
+    control: form.control,
+    name: "flat_references",
+  });
+
+  const employerDetails = useFieldArray({
+    control: form.control,
+    name: "employer_details",
   });
 
   const companyValues = form.watch("previous_companies");
@@ -136,6 +157,7 @@ export function ComplianceForm({
     });
   };
 
+  // ─── Section: Candidate & Vendor ────────────────────────────────────────────
   const renderCandidateFields = () => (
     <div className="grid gap-5 md:grid-cols-2">
       {[
@@ -179,6 +201,7 @@ export function ComplianceForm({
     </div>
   );
 
+  // ─── Section: Previous Companies (no refs nested) ────────────────────────────
   const renderCompanyFields = () => (
     <div className="space-y-6">
       {companies.fields.map((field, index) => (
@@ -266,22 +289,159 @@ export function ComplianceForm({
     </div>
   );
 
+  // ─── Section: References (flat, independent of companies) ───────────────────
   const renderReferencesFields = () => (
-    <div className="space-y-6">
-      {companies.fields.map((company, index) => (
-        <CompanyReferences
-          key={company.id}
-          control={form.control}
-          register={form.register}
-          companyIndex={index}
-          companyName={
-            companyValues?.[index]?.company_name || `Company ${index + 1}`
-          }
-        />
+    <div className="space-y-4">
+      {flatReferences.fields.length === 0 ? (
+        <p className="text-sm text-slate-400 py-2">
+          No references added yet. Use the buttons below to add.
+        </p>
+      ) : null}
+
+      {flatReferences.fields.map((field, idx) => (
+        <div
+          key={field.id}
+          className="rounded-2xl border border-white/10 bg-white/[0.02] p-4 space-y-4">
+          <div className="flex items-center justify-between border-b border-white/10 pb-2">
+            <div className="font-medium text-white text-sm">
+              Reference {idx + 1}
+            </div>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              onClick={() => flatReferences.remove(idx)}>
+              <Trash2 className="size-4 text-slate-400 hover:text-red-400" />
+            </Button>
+          </div>
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-2">
+              <Label>Reference Name</Label>
+              <Input
+                {...form.register(`flat_references.${idx}.reference_name`)}
+                placeholder="Enter reference name"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Role / Designation</Label>
+              <Input
+                {...form.register(`flat_references.${idx}.designation`)}
+                placeholder="e.g. Manager, Team Lead"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Email</Label>
+              <Input
+                {...form.register(`flat_references.${idx}.email`)}
+                placeholder="reference@email.com"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Phone Number</Label>
+              <Input
+                {...form.register(`flat_references.${idx}.phone`)}
+                placeholder="+1 234 567 8900"
+              />
+            </div>
+            <div className="space-y-2 md:col-span-2">
+              <Label>Notes</Label>
+              <Textarea
+                {...form.register(`flat_references.${idx}.notes`)}
+                placeholder="Additional notes..."
+                rows={2}
+              />
+            </div>
+          </div>
+        </div>
       ))}
+
+      <div className="flex flex-wrap items-center gap-2">
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={() =>
+            flatReferences.append({
+              reference_name: "",
+              designation: "",
+              email: "",
+              phone: "",
+              notes: "",
+            })
+          }>
+          <Plus className="size-4 mr-2" />
+          Add Reference
+        </Button>
+        {REFERENCE_PRESETS.map((preset) => (
+          <Button
+            key={preset}
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="text-xs border border-white/10 hover:bg-white/5"
+            onClick={() =>
+              flatReferences.append({
+                reference_name: "",
+                designation: preset,
+                email: "",
+                phone: "",
+                notes: "",
+              })
+            }>
+            + {preset}
+          </Button>
+        ))}
+      </div>
     </div>
   );
 
+  // ─── Section: Employer Details (admin only, name only, n entries) ────────────
+  const renderEmployerDetailsFields = () => (
+    <div className="space-y-4">
+      {employerDetails.fields.length === 0 ? (
+        <p className="text-sm text-slate-400 py-2">
+          No employer details added yet. Click below to add.
+        </p>
+      ) : null}
+
+      {employerDetails.fields.map((field, idx) => (
+        <div
+          key={field.id}
+          className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.02] px-4 py-3">
+          <UserRound className="size-4 text-sky-400 shrink-0" />
+          <div className="flex-1 space-y-1">
+            <Label className="text-xs text-slate-400">
+              Employer {idx + 1}
+            </Label>
+            <Input
+              {...form.register(`employer_details.${idx}.name`)}
+              placeholder="Enter employer name"
+              className="h-8 text-sm"
+            />
+            <p className="text-xs text-rose-300">
+              {(form.formState.errors.employer_details?.[idx] as { name?: { message?: string } })?.name?.message ?? ""}
+            </p>
+          </div>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={() => employerDetails.remove(idx)}>
+            <Trash2 className="size-4 text-slate-400 hover:text-red-400" />
+          </Button>
+        </div>
+      ))}
+
+      <Button
+        type="button"
+        variant="secondary"
+        onClick={() => employerDetails.append({ name: "" })}>
+        <Plus className="size-4 mr-2" />
+        Add Employer
+      </Button>
+    </div>
+  );
+
+  // ─── Action buttons ──────────────────────────────────────────────────────────
   const renderActionButtons = () => (
     <div className="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-white/10">
       <div className="flex flex-wrap items-center gap-2">
@@ -338,8 +498,188 @@ export function ComplianceForm({
     </div>
   );
 
+  // ─── All-details view (admin) ────────────────────────────────────────────────
+  const renderAllView = () => (
+    <div className="space-y-8">
+      {/* 1. Candidate & Vendor */}
+      <Card>
+        <CardContent className="pt-6 space-y-4">
+          <div className="flex items-center gap-2 border-b border-white/10 pb-3">
+            <Contact className="size-4 text-sky-400" />
+            <h3 className="text-base font-semibold text-white">
+              1. Candidate & Vendor Information
+            </h3>
+          </div>
+          {renderCandidateFields()}
+        </CardContent>
+      </Card>
+
+      {/* 2. Previous Companies */}
+      <Card>
+        <CardContent className="pt-6 space-y-4">
+          <div className="flex items-center gap-2 border-b border-white/10 pb-3">
+            <Briefcase className="size-4 text-violet-400" />
+            <h3 className="text-base font-semibold text-white">
+              2. Previous Companies
+            </h3>
+          </div>
+          {renderCompanyFields()}
+        </CardContent>
+      </Card>
+
+      {/* 3. References */}
+      <Card>
+        <CardContent className="pt-6 space-y-4">
+          <div className="flex items-center gap-2 border-b border-white/10 pb-3">
+            <Contact className="size-4 text-emerald-400" />
+            <h3 className="text-base font-semibold text-white">
+              3. References
+            </h3>
+            <span className="ml-auto text-xs text-slate-500">
+              {flatReferences.fields.length} added
+            </span>
+          </div>
+          {renderReferencesFields()}
+        </CardContent>
+      </Card>
+
+      {/* 4. Employer Details (admin only) */}
+      {isAdminEdit && (
+        <Card>
+          <CardContent className="pt-6 space-y-4">
+            <div className="flex items-center gap-2 border-b border-white/10 pb-3">
+              <UserRound className="size-4 text-amber-400" />
+              <h3 className="text-base font-semibold text-white">
+                4. Employer Details
+              </h3>
+              <span className="ml-auto text-xs text-slate-500">
+                {employerDetails.fields.length} added
+              </span>
+            </div>
+            {renderEmployerDetailsFields()}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* 5. Record Status & Admin Review (admin only) */}
+      {isAdminEdit && (
+        <Card className="border-sky-500/20 bg-sky-500/[0.02]">
+          <CardContent className="pt-6 space-y-4">
+            <div className="border-b border-white/10 pb-3">
+              <h3 className="text-base font-semibold text-white">
+                5. Record Status & Admin Review
+              </h3>
+            </div>
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="status">Record Status</Label>
+                <select
+                  id="status"
+                  {...form.register("status")}
+                  className="w-full rounded-xl border border-white/10 bg-slate-900 px-3 py-2 text-sm text-white focus:border-sky-400 focus:outline-none">
+                  {recordStatuses.map((s) => (
+                    <option key={s} value={s}>
+                      {s}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              {currentStatus === "Rejected" && (
+                <div className="space-y-2 md:col-span-2">
+                  <Label htmlFor="rejection_reason">Rejection Reason</Label>
+                  <Textarea
+                    id="rejection_reason"
+                    {...form.register("rejection_reason")}
+                    placeholder="Provide clear feedback on why this record was rejected..."
+                    rows={3}
+                  />
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+
+  // ─── Step-by-step view (marketing / new records) ─────────────────────────────
+  const renderStepsView = () => (
+    <>
+      <div className="grid gap-3 md:grid-cols-3">
+        {steps.map((label, index) => (
+          <button
+            key={label}
+            type="button"
+            className={`rounded-2xl border px-4 py-3 text-left transition ${
+              index === step
+                ? "border-sky-400/30 bg-sky-500/10 text-white"
+                : "border-white/10 bg-white/[0.03] text-slate-400"
+            }`}
+            onClick={() => setStep(index)}>
+            <div className="text-xs uppercase tracking-[0.24em]">
+              Step {index + 1}
+            </div>
+            <div className="mt-1 font-medium">{label}</div>
+          </button>
+        ))}
+      </div>
+
+      <Card>
+        <CardContent className="pt-6">
+          <AnimatePresence mode="wait">
+            {step === 0 ? (
+              <motion.div
+                key="step-1"
+                initial={{ opacity: 0, x: 12 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -12 }}>
+                {renderCandidateFields()}
+              </motion.div>
+            ) : step === 1 ? (
+              <motion.div
+                key="step-2"
+                initial={{ opacity: 0, x: 12 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -12 }}>
+                {renderCompanyFields()}
+              </motion.div>
+            ) : (
+              <motion.div
+                key="step-3"
+                initial={{ opacity: 0, x: 12 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -12 }}>
+                {renderReferencesFields()}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </CardContent>
+      </Card>
+
+      <div className="flex flex-col gap-3 sm:flex-row sm:justify-between">
+        <div className="flex gap-3">
+          <Button
+            type="button"
+            variant="secondary"
+            disabled={step === 0}
+            onClick={() => setStep((value) => value - 1)}>
+            Previous
+          </Button>
+          <Button
+            type="button"
+            variant="secondary"
+            disabled={step === steps.length - 1}
+            onClick={() => setStep((value) => value + 1)}>
+            Next
+          </Button>
+        </div>
+      </div>
+    </>
+  );
+
   return (
     <div className="space-y-6">
+      {/* Header — only show view toggle for non-admin */}
       <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
         <div>
           <h3 className="font-semibold text-white">
@@ -347,308 +687,37 @@ export function ComplianceForm({
           </h3>
           <p className="text-xs text-slate-400">
             {isAdminEdit
-              ? "Edit candidate details, previous companies, references, and review decision all at once."
+              ? "Edit candidate details, companies, references, employer details, and review decision all at once."
               : "Switch between Step-by-Step wizard or All-in-One View."}
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <Button
-            type="button"
-            variant={viewMode === "all" ? "default" : "secondary"}
-            size="sm"
-            onClick={() => setViewMode("all")}>
-            <ListChecks className="size-4 mr-2" />
-            All Details View
-          </Button>
-          <Button
-            type="button"
-            variant={viewMode === "steps" ? "default" : "secondary"}
-            size="sm"
-            onClick={() => setViewMode("steps")}>
-            <Layers className="size-4 mr-2" />
-            Step-by-Step
-          </Button>
-        </div>
+        {!isAdminEdit && (
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant={viewMode === "all" ? "default" : "secondary"}
+              size="sm"
+              onClick={() => setViewMode("all")}>
+              <ListChecks className="size-4 mr-2" />
+              All Details View
+            </Button>
+            <Button
+              type="button"
+              variant={viewMode === "steps" ? "default" : "secondary"}
+              size="sm"
+              onClick={() => setViewMode("steps")}>
+              <Layers className="size-4 mr-2" />
+              Step-by-Step
+            </Button>
+          </div>
+        )}
       </div>
 
       {renderActionButtons()}
 
-      {viewMode === "all" ? (
-        <div className="space-y-8">
-          <Card>
-            <CardContent className="pt-6 space-y-4">
-              <div className="border-b border-white/10 pb-3">
-                <h3 className="text-base font-semibold text-white">
-                  1. Candidate & Vendor Information
-                </h3>
-              </div>
-              {renderCandidateFields()}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="pt-6 space-y-4">
-              <div className="border-b border-white/10 pb-3">
-                <h3 className="text-base font-semibold text-white">
-                  2. Previous Companies
-                </h3>
-              </div>
-              {renderCompanyFields()}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="pt-6 space-y-4">
-              <div className="border-b border-white/10 pb-3">
-                <h3 className="text-base font-semibold text-white">
-                  3. References (All Companies)
-                </h3>
-              </div>
-              {renderReferencesFields()}
-            </CardContent>
-          </Card>
-
-          {isAdminEdit && (
-            <Card className="border-sky-500/20 bg-sky-500/[0.02]">
-              <CardContent className="pt-6 space-y-4">
-                <div className="border-b border-white/10 pb-3">
-                  <h3 className="text-base font-semibold text-white">
-                    4. Record Status & Admin Review
-                  </h3>
-                </div>
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="status">Record Status</Label>
-                    <select
-                      id="status"
-                      {...form.register("status")}
-                      className="w-full rounded-xl border border-white/10 bg-slate-900 px-3 py-2 text-sm text-white focus:border-sky-400 focus:outline-none">
-                      {recordStatuses.map((s) => (
-                        <option key={s} value={s}>
-                          {s}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  {currentStatus === "Rejected" && (
-                    <div className="space-y-2 md:col-span-2">
-                      <Label htmlFor="rejection_reason">Rejection Reason</Label>
-                      <Textarea
-                        id="rejection_reason"
-                        {...form.register("rejection_reason")}
-                        placeholder="Provide clear feedback on why this record was rejected..."
-                        rows={3}
-                      />
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </div>
-      ) : (
-        <>
-          <div className="grid gap-3 md:grid-cols-3">
-            {steps.map((label, index) => (
-              <button
-                key={label}
-                type="button"
-                className={`rounded-2xl border px-4 py-3 text-left transition ${
-                  index === step
-                    ? "border-sky-400/30 bg-sky-500/10 text-white"
-                    : "border-white/10 bg-white/[0.03] text-slate-400"
-                }`}
-                onClick={() => setStep(index)}>
-                <div className="text-xs uppercase tracking-[0.24em]">
-                  Step {index + 1}
-                </div>
-                <div className="mt-1 font-medium">{label}</div>
-              </button>
-            ))}
-          </div>
-
-          <Card>
-            <CardContent className="pt-6">
-              <AnimatePresence mode="wait">
-                {step === 0 ? (
-                  <motion.div
-                    key="step-1"
-                    initial={{ opacity: 0, x: 12 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -12 }}>
-                    {renderCandidateFields()}
-                  </motion.div>
-                ) : step === 1 ? (
-                  <motion.div
-                    key="step-2"
-                    initial={{ opacity: 0, x: 12 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -12 }}>
-                    {renderCompanyFields()}
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    key="step-3"
-                    initial={{ opacity: 0, x: 12 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -12 }}>
-                    {renderReferencesFields()}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </CardContent>
-          </Card>
-
-          <div className="flex flex-col gap-3 sm:flex-row sm:justify-between">
-            <div className="flex gap-3">
-              <Button
-                type="button"
-                variant="secondary"
-                disabled={step === 0}
-                onClick={() => setStep((value) => value - 1)}>
-                Previous
-              </Button>
-              <Button
-                type="button"
-                variant="secondary"
-                disabled={step === steps.length - 1}
-                onClick={() => setStep((value) => value + 1)}>
-                Next
-              </Button>
-            </div>
-          </div>
-        </>
-      )}
+      {viewMode === "all" ? renderAllView() : renderStepsView()}
 
       {renderActionButtons()}
-    </div>
-  );
-}
-
-function CompanyReferences({
-  control,
-  register,
-  companyIndex,
-  companyName,
-}: {
-  control: Control<ComplianceRecordSchema>;
-  register: UseFormRegister<ComplianceRecordSchema>;
-  companyIndex: number;
-  companyName: string;
-}) {
-  const references = useFieldArray({
-    control,
-    name: `previous_companies.${companyIndex}.references`,
-  });
-
-  const appendReference = (designation: string) =>
-    references.append({
-      reference_name: "",
-      designation,
-      email: "",
-      phone: "",
-      notes: "",
-    });
-
-  return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-4 space-y-4">
-      <div className="flex items-center justify-between border-b border-white/10 pb-2">
-        <div className="font-medium text-white">
-          References · {companyName}
-        </div>
-      </div>
-
-      <div className="space-y-4">
-        {references.fields.length === 0 ? (
-          <p className="text-xs text-slate-400">
-            No references added for this company yet.
-          </p>
-        ) : null}
-        {references.fields.map((field, idx) => (
-          <div
-            key={field.id}
-            className="rounded-xl border border-white/10 bg-white/[0.02] p-4 space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="font-medium text-white">Reference {idx + 1}</div>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={() => references.remove(idx)}>
-                <Trash2 className="size-4 text-slate-400 hover:text-red-400" />
-              </Button>
-            </div>
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label>Reference Name</Label>
-                <Input
-                  {...register(
-                    `previous_companies.${companyIndex}.references.${idx}.reference_name`,
-                  )}
-                  placeholder="Enter reference name"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Role</Label>
-                <Input
-                  {...register(
-                    `previous_companies.${companyIndex}.references.${idx}.designation`,
-                  )}
-                  placeholder="Enter role"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Email</Label>
-                <Input
-                  {...register(
-                    `previous_companies.${companyIndex}.references.${idx}.email`,
-                  )}
-                  placeholder="Enter email address"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Phone number</Label>
-                <Input
-                  {...register(
-                    `previous_companies.${companyIndex}.references.${idx}.phone`,
-                  )}
-                  placeholder="Enter phone number"
-                />
-              </div>
-              <div className="space-y-2 md:col-span-2">
-                <Label>Notes</Label>
-                <Textarea
-                  {...register(
-                    `previous_companies.${companyIndex}.references.${idx}.notes`,
-                  )}
-                  placeholder="Additional notes..."
-                />
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <div className="flex flex-wrap items-center gap-2">
-        <Button
-          type="button"
-          variant="secondary"
-          onClick={() => appendReference("")}>
-          <Plus className="size-4 mr-2" />
-          Add Reference
-        </Button>
-        {REFERENCE_PRESETS.map((preset) => (
-          <Button
-            key={preset}
-            type="button"
-            variant="ghost"
-            size="sm"
-            className="text-xs border border-white/10 hover:bg-white/5"
-            onClick={() => appendReference(preset)}>
-            + {preset}
-          </Button>
-        ))}
-      </div>
     </div>
   );
 }

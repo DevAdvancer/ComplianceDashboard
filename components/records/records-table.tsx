@@ -15,7 +15,6 @@ import {
   Archive,
   Download,
   MoreHorizontal,
-  Pencil,
   ShieldCheck,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -128,14 +127,7 @@ function RecordActionsMenu({ row, role }: { row: RowData; role: UserRole }) {
         <DropdownMenuItem asChild>
           <Link href={`/records/${row.id}/report`}>View report</Link>
         </DropdownMenuItem>
-        {role === "Admin" ? (
-          <DropdownMenuItem asChild>
-            <Link href={`/records/${row.id}/edit`}>
-              <Pencil className="mr-2 size-4" />
-              Edit All Details
-            </Link>
-          </DropdownMenuItem>
-        ) : null}
+
         {canAdminArchive ? (
           <DropdownMenuItem
             className="text-amber-200"
@@ -174,11 +166,7 @@ function RecordCardActions({ row, role }: { row: RowData; role: UserRole }) {
       <Button asChild className="flex-1">
         <Link href={`/records/${row.id}/report`}>View</Link>
       </Button>
-      {role === "Admin" ? (
-        <Button asChild variant="secondary" className="flex-1">
-          <Link href={`/records/${row.id}/edit`}>Edit</Link>
-        </Button>
-      ) : null}
+
       {canAdminArchive ? (
         <Button
           type="button"
