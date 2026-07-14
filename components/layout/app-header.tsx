@@ -70,15 +70,16 @@ export function AppHeader({
         </div>
 
         <div className="flex items-center gap-2">
-          {role === "Admin" ? (
-            <Button
-              variant="secondary"
-              onClick={() => setCommandMenuOpen(true)}
-              className="hidden md:flex">
-              <Search className="size-4" />
-              Command
-            </Button>
-          ) : null}
+          <button
+            type="button"
+            onClick={() => setCommandMenuOpen(true)}
+            className="hidden sm:flex items-center gap-2.5 rounded-xl border border-white/10 bg-white/[0.04] px-3.5 py-2 text-sm text-slate-400 transition hover:border-sky-500/30 hover:bg-white/[0.08] hover:text-slate-200 cursor-pointer shadow-sm">
+            <Search className="size-4 text-sky-400" />
+            <span className="font-medium text-slate-300">Search databases...</span>
+            <kbd className="ml-1 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border border-white/15 bg-white/5 px-1.5 font-mono text-[10px] font-semibold text-slate-400">
+              Shift + S
+            </kbd>
+          </button>
           {role === "Marketing" ? (
             <Button asChild className="hidden sm:inline-flex">
               <Link href="/records/new">

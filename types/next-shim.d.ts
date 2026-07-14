@@ -27,6 +27,14 @@ declare module "next/navigation" {
   export function redirect(url: string): never;
   export function notFound(): never;
   export function usePathname(): string;
+  export function useRouter(): {
+    push(href: string, options?: { scroll?: boolean }): void;
+    replace(href: string, options?: { scroll?: boolean }): void;
+    refresh(): void;
+    back(): void;
+    forward(): void;
+    prefetch(href: string): void;
+  };
 }
 
 declare module "next/cache" {

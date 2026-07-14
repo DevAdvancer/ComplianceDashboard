@@ -15,7 +15,8 @@ const nestedRecordSelect = `
   previous_companies (
     *,
     references (*)
-  )
+  ),
+  employer_details (*)
 `;
 
 export async function getDashboardStats(userId?: string, role?: "Admin" | "Marketing") {
@@ -95,35 +96,55 @@ export async function getComplianceRecords(options?: {
   query?: string;
 }) {
   const supabase = createAdminClient();
-  let query = supabase.from("compliance_records").select(nestedRecordSelect).order("created_at", {
-    ascending: false,
-  });
 
-  if (options?.role === "Marketing" && options.userId) {
-    query = query.eq("created_by", options.userId);
+  const buildQuery = (selectString: string) => {
+    let q = supabase.from("compliance_records").select(selectString).order("created_at", {
+      ascending: false,
+    });
+
+    if (options?.role === "Marketing" && options.userId) {
+      q = q.eq("created_by", options.userId);
+    }
+
+    if (options?.status) {
+      q = q.eq("status", options.status);
+    }
+
+    if (options?.query && options.query.trim().length > 0) {
+      const search = options.query.trim();
+      const tokens = search.split(/\s+/).filter(Boolean);
+      for (const token of tokens) {
+        q = q.or(
+          [
+            `candidate_name.ilike.%${token}%`,
+            `candidate_technology.ilike.%${token}%`,
+            `vendor_name.ilike.%${token}%`,
+            `end_client.ilike.%${token}%`,
+            `visa_status.ilike.%${token}%`,
+            `applied_role.ilike.%${token}%`,
+            `status.ilike.%${token}%`,
+          ].join(","),
+        );
+      }
+    }
+    return q;
+  };
+
+  const [res, usersMap] = await Promise.all([buildQuery(nestedRecordSelect), getUsersMap()]);
+  let data: unknown = res.data;
+
+  if (res.error) {
+    console.warn("Full nested select unavailable, using fallback select:", res.error.message || res.error.code || "PostgREST relation error");
+    const fallbackRes = await buildQuery("*, previous_companies (*, references (*))");
+    data = fallbackRes.data;
+    if (fallbackRes.error) {
+      console.warn("Fallback select unavailable, using basic select:", fallbackRes.error.message || fallbackRes.error.code || "PostgREST relation error");
+      const basicRes = await buildQuery("*");
+      data = basicRes.data;
+    }
   }
 
-  if (options?.status) {
-    query = query.eq("status", options.status);
-  }
-
-  if (options?.query) {
-    const search = options.query.trim();
-    query = query.or(
-      [
-        `candidate_name.ilike.%${search}%`,
-        `candidate_technology.ilike.%${search}%`,
-        `vendor_name.ilike.%${search}%`,
-        `end_client.ilike.%${search}%`,
-        `visa_status.ilike.%${search}%`,
-        `applied_role.ilike.%${search}%`,
-        `status.ilike.%${search}%`,
-      ].join(","),
-    );
-  }
-
-  const [{ data }, usersMap] = await Promise.all([query, getUsersMap()]);
-  const rows = (data ?? []) as ComplianceRecordWithRelations[];
+  const rows = (data ?? []) as unknown as ComplianceRecordWithRelations[];
 
   return rows.map((record) => ({
     ...record,
@@ -134,16 +155,31 @@ export async function getComplianceRecords(options?: {
 
 export const getComplianceRecordById = cache(async (id: string) => {
   const supabase = createAdminClient();
-  const [{ data }, usersMap] = await Promise.all([
+  const [res, usersMap] = await Promise.all([
     supabase.from("compliance_records").select(nestedRecordSelect).eq("id", id).maybeSingle(),
     getUsersMap(),
   ]);
+  let data: unknown = res.data;
+
+  if (res.error) {
+    console.warn("Full nested select by ID unavailable, using fallback select:", res.error.message || res.error.code || "PostgREST relation error");
+    const fallbackRes = await supabase
+      .from("compliance_records")
+      .select("*, previous_companies (*, references (*))")
+      .eq("id", id)
+      .maybeSingle();
+    data = fallbackRes.data;
+    if (fallbackRes.error) {
+      const basicRes = await supabase.from("compliance_records").select("*").eq("id", id).maybeSingle();
+      data = basicRes.data;
+    }
+  }
 
   if (!data) {
     return null;
   }
 
-  const record = data as ComplianceRecordWithRelations;
+  const record = data as unknown as ComplianceRecordWithRelations;
 
   return {
     ...record,
@@ -252,27 +288,46 @@ export async function upsertRecordGraph(
     throw new Error(companiesError.message);
   }
 
+  const flatRefs = values.flat_references ?? [];
   const referencesPayload: Database["public"]["Tables"]["references"]["Insert"][] =
-    values.previous_companies.flatMap((company, index) => {
-      const companyId = companiesPayload[index].id as string;
-      return (company.references ?? [])
-        .filter(
-          (reference) =>
-            reference.reference_name.trim() ||
-            reference.designation.trim() ||
-            reference.email.trim() ||
-            reference.phone.trim(),
-        )
-        .map((reference) => ({
-          previous_company_id: companyId,
-          reference_name: reference.reference_name,
-          designation: reference.designation,
-          email: reference.email || null,
-          phone: reference.phone || null,
-          notes: reference.notes || null,
-          created_by: userId,
-        }));
-    });
+    flatRefs.length > 0
+      ? flatRefs
+          .filter(
+            (ref) =>
+              ref.reference_name.trim() ||
+              ref.designation.trim() ||
+              ref.email.trim() ||
+              ref.phone.trim(),
+          )
+          .map((ref) => ({
+            previous_company_id: ref.previous_company_id || (companiesPayload[0].id as string),
+            reference_name: ref.reference_name,
+            designation: ref.designation,
+            email: ref.email || null,
+            phone: ref.phone || null,
+            notes: ref.notes || null,
+            created_by: userId,
+          }))
+      : values.previous_companies.flatMap((company, index) => {
+          const companyId = companiesPayload[index].id as string;
+          return (company.references ?? [])
+            .filter(
+              (reference) =>
+                reference.reference_name.trim() ||
+                reference.designation.trim() ||
+                reference.email.trim() ||
+                reference.phone.trim(),
+            )
+            .map((reference) => ({
+              previous_company_id: companyId,
+              reference_name: reference.reference_name,
+              designation: reference.designation,
+              email: reference.email || null,
+              phone: reference.phone || null,
+              notes: reference.notes || null,
+              created_by: userId,
+            }));
+        });
 
   if (referencesPayload.length > 0) {
     const { error: referencesError } = await supabase
@@ -281,6 +336,29 @@ export async function upsertRecordGraph(
 
     if (referencesError) {
       throw new Error(referencesError.message);
+    }
+  }
+
+  await supabase.from("employer_details").delete().eq("compliance_record_id", recordId);
+
+  const employerDetailsList = values.employer_details ?? [];
+  const employerDetailsPayload: Database["public"]["Tables"]["employer_details"]["Insert"][] =
+    employerDetailsList
+      .filter((ed) => ed.name.trim())
+      .map((ed, index) => ({
+        id: ed.id || randomUUID(),
+        compliance_record_id: recordId,
+        name: ed.name.trim(),
+        display_order: index,
+      }));
+
+  if (employerDetailsPayload.length > 0) {
+    const { error: employerDetailsError } = await supabase
+      .from("employer_details")
+      .insert(employerDetailsPayload);
+
+    if (employerDetailsError) {
+      throw new Error(employerDetailsError.message);
     }
   }
 }

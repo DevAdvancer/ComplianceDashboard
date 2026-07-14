@@ -1,8 +1,7 @@
 import type { RecordStatus } from "@/lib/types/app";
 
 export function canMarketingEditRecord(status: RecordStatus) {
-  void status;
-  return false;
+  return status === "Draft" || status === "Rejected";
 }
 
 export function canAdminEditRecord(status: RecordStatus) {

@@ -5,11 +5,10 @@ import type { ComponentType } from "react";
 import { usePathname } from "next/navigation";
 import {
   Archive,
-  FileSearch,
+  ClipboardCheck,
   FolderKanban,
   LayoutDashboard,
   LogOut,
-  Search,
   Settings,
   TimerReset,
 } from "lucide-react";
@@ -36,13 +35,7 @@ const adminNavItems: NavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/records", label: "Compliance Records", icon: FolderKanban },
   { href: "/pending", label: "Pending Requests", icon: TimerReset },
-  { href: "/search", label: "Search", icon: Search },
-  {
-    href: "/records/sample/report",
-    label: "Reports",
-    icon: FileSearch,
-    disabled: true,
-  },
+  { href: "/resume-qc", label: "Resume QC", icon: ClipboardCheck },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 

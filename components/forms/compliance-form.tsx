@@ -109,7 +109,11 @@ export function ComplianceForm({
         },
       ],
       flat_references: existingFlatRefs,
-      employer_details: [],
+      employer_details:
+        record?.employer_details?.map((ed) => ({
+          id: ed.id,
+          name: ed.name,
+        })) ?? [],
     }),
     [record, existingFlatRefs],
   );
