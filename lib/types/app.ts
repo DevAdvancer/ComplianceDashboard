@@ -126,6 +126,18 @@ export type ResumeQcInput = {
   stem_opt_taken?: boolean;
   stem_opt_start_date?: string;
   stem_opt_end_date?: string;
+  h1b_taken?: boolean;
+  h1b_start_date?: string;
+  h1b_end_date?: string;
+  h4_taken?: boolean;
+  h4_start_date?: string;
+  h4_end_date?: string;
+  gc_taken?: boolean;
+  gc_start_date?: string;
+  gc_end_date?: string;
+  usc_taken?: boolean;
+  usc_start_date?: string;
+  usc_end_date?: string;
   experiences: ResumeQcExperienceInput[];
   opt_employers: ResumeQcOptEmployerInput[];
   stem_opt_employers: ResumeQcStemOptEmployerInput[];

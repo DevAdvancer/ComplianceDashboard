@@ -7,6 +7,10 @@ import {
   Briefcase,
   Building2,
   Calendar,
+  FileText,
+  Globe,
+  Award,
+  ShieldCheck,
   ClipboardCheck,
   GraduationCap,
   Plus,
@@ -18,6 +22,7 @@ import { toast } from "sonner";
 
 import { saveResumeQcAction } from "@/app/qc-actions";
 import { Button } from "@/components/ui/button";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -60,6 +65,18 @@ export function ResumeQcForm({
       stem_opt_taken: Boolean(record?.stem_opt_taken),
       stem_opt_start_date: record?.stem_opt_start_date ?? "",
       stem_opt_end_date: record?.stem_opt_end_date ?? "",
+      h1b_taken: Boolean(record?.h1b_taken),
+      h1b_start_date: record?.h1b_start_date ?? "",
+      h1b_end_date: record?.h1b_end_date ?? "",
+      h4_taken: Boolean(record?.h4_taken),
+      h4_start_date: record?.h4_start_date ?? "",
+      h4_end_date: record?.h4_end_date ?? "",
+      gc_taken: Boolean(record?.gc_taken),
+      gc_start_date: record?.gc_start_date ?? "",
+      gc_end_date: record?.gc_end_date ?? "",
+      usc_taken: Boolean(record?.usc_taken),
+      usc_start_date: record?.usc_start_date ?? "",
+      usc_end_date: record?.usc_end_date ?? "",
       experiences:
         record?.experiences?.length ? record.experiences.map((exp, index) => ({
           id: exp.id,
@@ -124,6 +141,10 @@ export function ResumeQcForm({
   const cptTaken = form.watch("cpt_taken");
   const optTaken = form.watch("opt_taken");
   const stemOptTaken = form.watch("stem_opt_taken");
+  const h1bTaken = form.watch("h1b_taken");
+  const h4Taken = form.watch("h4_taken");
+  const gcTaken = form.watch("gc_taken");
+  const uscTaken = form.watch("usc_taken");
 
   const onSubmit = (values: ResumeQcSchema) => {
     startTransition(async () => {
@@ -143,10 +164,11 @@ export function ResumeQcForm({
 
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+      <Accordion type="multiple" defaultValue={["section-1"]} className="space-y-6">
       {/* ── Section 1: Candidate & QC Identification ──────────────── */}
-      <Card className="border-white/10 bg-white/[0.02]">
-        <CardContent className="p-6 space-y-6">
-          <div className="flex items-center gap-3 border-b border-white/10 pb-4">
+      <AccordionItem value="section-1">
+        <AccordionTrigger>
+          <div className="flex items-center gap-3 w-full mr-4 text-left">
             <div className="flex size-9 items-center justify-center rounded-xl bg-sky-500/10 border border-sky-400/20 text-sky-400">
               <User className="size-5" />
             </div>
@@ -159,6 +181,8 @@ export function ResumeQcForm({
               </p>
             </div>
           </div>
+        </AccordionTrigger>
+        <AccordionContent className="space-y-6 pt-2">
 
           <div className="grid gap-5 md:grid-cols-2">
             <div className="space-y-2">
@@ -252,13 +276,13 @@ export function ResumeQcForm({
               />
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </AccordionContent>
+      </AccordionItem>
 
       {/* ── Section 2: Education & Degrees ────────────────────────── */}
-      <Card className="border-white/10 bg-white/[0.02]">
-        <CardContent className="p-6 space-y-6">
-          <div className="flex items-center gap-3 border-b border-white/10 pb-4">
+      <AccordionItem value="section-2">
+        <AccordionTrigger>
+          <div className="flex items-center gap-3 w-full mr-4 text-left">
             <div className="flex size-9 items-center justify-center rounded-xl bg-violet-500/10 border border-violet-400/20 text-violet-400">
               <GraduationCap className="size-5" />
             </div>
@@ -271,6 +295,8 @@ export function ResumeQcForm({
               </p>
             </div>
           </div>
+        </AccordionTrigger>
+        <AccordionContent className="space-y-6 pt-2">
 
           <div className="space-y-6">
             <div>
@@ -345,13 +371,13 @@ export function ResumeQcForm({
               </div>
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </AccordionContent>
+      </AccordionItem>
 
       {/* ── Section 3: Experiences (Dynamic List) ─────────────────── */}
-      <Card className="border-white/10 bg-white/[0.02]">
-        <CardContent className="p-6 space-y-6">
-          <div className="flex items-center justify-between border-b border-white/10 pb-4">
+      <AccordionItem value="section-3">
+        <AccordionTrigger>
+          <div className="flex items-center justify-between w-full mr-4 text-left">
             <div className="flex items-center gap-3">
               <div className="flex size-9 items-center justify-center rounded-xl bg-emerald-500/10 border border-emerald-400/20 text-emerald-400">
                 <Briefcase className="size-5" />
@@ -366,6 +392,8 @@ export function ResumeQcForm({
               </div>
             </div>
           </div>
+        </AccordionTrigger>
+        <AccordionContent className="space-y-6 pt-2">
 
           <div className="space-y-6">
             {experiences.fields.map((field, index) => (
@@ -456,13 +484,13 @@ export function ResumeQcForm({
               Add Experience Field / Entry
             </Button>
           </div>
-        </CardContent>
-      </Card>
+        </AccordionContent>
+      </AccordionItem>
 
       {/* ── Section 4: CPT Information ────────────────────────────── */}
-      <Card className="border-white/10 bg-white/[0.02]">
-        <CardContent className="p-6 space-y-6">
-          <div className="flex items-center justify-between border-b border-white/10 pb-4">
+      <AccordionItem value="section-4">
+        <AccordionTrigger>
+          <div className="flex items-center justify-between w-full mr-4 text-left">
             <div className="flex items-center gap-3">
               <div className="flex size-9 items-center justify-center rounded-xl bg-amber-500/10 border border-amber-400/20 text-amber-400">
                 <Calendar className="size-5" />
@@ -476,7 +504,7 @@ export function ResumeQcForm({
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3" onClick={(e) => e.stopPropagation()}>
               <Label htmlFor="cpt_taken" className="text-sm text-slate-300">
                 CPT Taken?
               </Label>
@@ -488,6 +516,8 @@ export function ResumeQcForm({
               />
             </div>
           </div>
+        </AccordionTrigger>
+        <AccordionContent className="space-y-6 pt-2">
 
           {cptTaken && (
             <div className="grid gap-5 md:grid-cols-3 rounded-2xl border border-amber-500/20 bg-amber-500/[0.03] p-5">
@@ -529,13 +559,13 @@ export function ResumeQcForm({
               </div>
             </div>
           )}
-        </CardContent>
-      </Card>
+        </AccordionContent>
+      </AccordionItem>
 
       {/* ── Section 5: OPT Information & Employers ────────────────── */}
-      <Card className="border-white/10 bg-white/[0.02]">
-        <CardContent className="p-6 space-y-6">
-          <div className="flex items-center justify-between border-b border-white/10 pb-4">
+      <AccordionItem value="section-5">
+        <AccordionTrigger>
+          <div className="flex items-center justify-between w-full mr-4 text-left">
             <div className="flex items-center gap-3">
               <div className="flex size-9 items-center justify-center rounded-xl bg-blue-500/10 border border-blue-400/20 text-blue-400">
                 <Building2 className="size-5" />
@@ -549,7 +579,7 @@ export function ResumeQcForm({
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3" onClick={(e) => e.stopPropagation()}>
               <Label htmlFor="opt_taken" className="text-sm text-slate-300">
                 OPT Taken?
               </Label>
@@ -561,6 +591,8 @@ export function ResumeQcForm({
               />
             </div>
           </div>
+        </AccordionTrigger>
+        <AccordionContent className="space-y-6 pt-2">
 
           {optTaken && (
             <div className="space-y-6 rounded-2xl border border-blue-500/20 bg-blue-500/[0.03] p-5">
@@ -681,13 +713,13 @@ export function ResumeQcForm({
               </div>
             </div>
           )}
-        </CardContent>
-      </Card>
+        </AccordionContent>
+      </AccordionItem>
 
       {/* ── Section 6: STEM OPT Information & Employers ───────────── */}
-      <Card className="border-white/10 bg-white/[0.02]">
-        <CardContent className="p-6 space-y-6">
-          <div className="flex items-center justify-between border-b border-white/10 pb-4">
+      <AccordionItem value="section-6">
+        <AccordionTrigger>
+          <div className="flex items-center justify-between w-full mr-4 text-left">
             <div className="flex items-center gap-3">
               <div className="flex size-9 items-center justify-center rounded-xl bg-teal-500/10 border border-teal-400/20 text-teal-400">
                 <ClipboardCheck className="size-5" />
@@ -701,7 +733,7 @@ export function ResumeQcForm({
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3" onClick={(e) => e.stopPropagation()}>
               <Label htmlFor="stem_opt_taken" className="text-sm text-slate-300">
                 Stem OPT Taken?
               </Label>
@@ -713,6 +745,8 @@ export function ResumeQcForm({
               />
             </div>
           </div>
+        </AccordionTrigger>
+        <AccordionContent className="space-y-6 pt-2">
 
           {stemOptTaken && (
             <div className="space-y-6 rounded-2xl border border-teal-500/20 bg-teal-500/[0.03] p-5">
@@ -833,8 +867,275 @@ export function ResumeQcForm({
               </div>
             </div>
           )}
-        </CardContent>
-      </Card>
+        </AccordionContent>
+      </AccordionItem>
+
+      
+      {/* ── Section 7: H1B Information ────────────────────────────── */}
+      <AccordionItem value="section-7">
+        <AccordionTrigger>
+          <div className="flex items-center justify-between w-full mr-4 text-left">
+            <div className="flex items-center gap-3">
+              <div className="flex size-9 items-center justify-center rounded-xl bg-purple-500/10 border border-purple-400/20 text-purple-400">
+                <FileText className="size-5" />
+              </div>
+              <div>
+                <h3 className="text-base font-semibold text-white">
+                  H1B Status & Details
+                </h3>
+                <p className="text-xs text-slate-400">
+                  Record H1B status and validity dates.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3" onClick={(e) => e.stopPropagation()}>
+              <Label htmlFor="h1b_taken" className="text-sm text-slate-300">
+                H1B Taken?
+              </Label>
+              <input
+                id="h1b_taken"
+                type="checkbox"
+                {...form.register("h1b_taken")}
+                className="size-5 rounded border-white/20 bg-white/5 accent-sky-500 cursor-pointer"
+              />
+            </div>
+          </div>
+        </AccordionTrigger>
+        <AccordionContent className="space-y-6 pt-2">
+          {h1bTaken && (
+            <div className="grid gap-5 md:grid-cols-2 rounded-2xl border border-purple-500/20 bg-purple-500/[0.03] p-5">
+              <div className="space-y-2">
+                <Label>H1B Start Date</Label>
+                <Controller
+                  control={form.control}
+                  name="h1b_start_date"
+                  render={({ field: { value, onChange } }) => (
+                    <MonthYearPicker
+                      value={value}
+                      onChange={onChange}
+                      placeholder="Select H1B start"
+                    />
+                  )}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>H1B End Date</Label>
+                <Controller
+                  control={form.control}
+                  name="h1b_end_date"
+                  render={({ field: { value, onChange } }) => (
+                    <MonthYearPicker
+                      value={value}
+                      onChange={onChange}
+                      placeholder="Select H1B end"
+                    />
+                  )}
+                />
+              </div>
+            </div>
+          )}
+        </AccordionContent>
+      </AccordionItem>
+
+      {/* ── Section 8: H4 Information ────────────────────────────── */}
+      <AccordionItem value="section-8">
+        <AccordionTrigger>
+          <div className="flex items-center justify-between w-full mr-4 text-left">
+            <div className="flex items-center gap-3">
+              <div className="flex size-9 items-center justify-center rounded-xl bg-pink-500/10 border border-pink-400/20 text-pink-400">
+                <Globe className="size-5" />
+              </div>
+              <div>
+                <h3 className="text-base font-semibold text-white">
+                  H4 Status & Details
+                </h3>
+                <p className="text-xs text-slate-400">
+                  Record H4 status and validity dates.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3" onClick={(e) => e.stopPropagation()}>
+              <Label htmlFor="h4_taken" className="text-sm text-slate-300">
+                H4 Taken?
+              </Label>
+              <input
+                id="h4_taken"
+                type="checkbox"
+                {...form.register("h4_taken")}
+                className="size-5 rounded border-white/20 bg-white/5 accent-sky-500 cursor-pointer"
+              />
+            </div>
+          </div>
+        </AccordionTrigger>
+        <AccordionContent className="space-y-6 pt-2">
+          {h4Taken && (
+            <div className="grid gap-5 md:grid-cols-2 rounded-2xl border border-pink-500/20 bg-pink-500/[0.03] p-5">
+              <div className="space-y-2">
+                <Label>H4 Start Date</Label>
+                <Controller
+                  control={form.control}
+                  name="h4_start_date"
+                  render={({ field: { value, onChange } }) => (
+                    <MonthYearPicker
+                      value={value}
+                      onChange={onChange}
+                      placeholder="Select H4 start"
+                    />
+                  )}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>H4 End Date</Label>
+                <Controller
+                  control={form.control}
+                  name="h4_end_date"
+                  render={({ field: { value, onChange } }) => (
+                    <MonthYearPicker
+                      value={value}
+                      onChange={onChange}
+                      placeholder="Select H4 end"
+                    />
+                  )}
+                />
+              </div>
+            </div>
+          )}
+        </AccordionContent>
+      </AccordionItem>
+
+      {/* ── Section 9: Green Card Information ────────────────────────────── */}
+      <AccordionItem value="section-9">
+        <AccordionTrigger>
+          <div className="flex items-center justify-between w-full mr-4 text-left">
+            <div className="flex items-center gap-3">
+              <div className="flex size-9 items-center justify-center rounded-xl bg-emerald-500/10 border border-emerald-400/20 text-emerald-400">
+                <Award className="size-5" />
+              </div>
+              <div>
+                <h3 className="text-base font-semibold text-white">
+                  Green Card (GC)
+                </h3>
+                <p className="text-xs text-slate-400">
+                  Record Green Card status and dates.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3" onClick={(e) => e.stopPropagation()}>
+              <Label htmlFor="gc_taken" className="text-sm text-slate-300">
+                GC Status?
+              </Label>
+              <input
+                id="gc_taken"
+                type="checkbox"
+                {...form.register("gc_taken")}
+                className="size-5 rounded border-white/20 bg-white/5 accent-sky-500 cursor-pointer"
+              />
+            </div>
+          </div>
+        </AccordionTrigger>
+        <AccordionContent className="space-y-6 pt-2">
+          {gcTaken && (
+            <div className="grid gap-5 md:grid-cols-2 rounded-2xl border border-emerald-500/20 bg-emerald-500/[0.03] p-5">
+              <div className="space-y-2">
+                <Label>GC Start Date</Label>
+                <Controller
+                  control={form.control}
+                  name="gc_start_date"
+                  render={({ field: { value, onChange } }) => (
+                    <MonthYearPicker
+                      value={value}
+                      onChange={onChange}
+                      placeholder="Select GC start"
+                    />
+                  )}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>GC End Date</Label>
+                <Controller
+                  control={form.control}
+                  name="gc_end_date"
+                  render={({ field: { value, onChange } }) => (
+                    <MonthYearPicker
+                      value={value}
+                      onChange={onChange}
+                      placeholder="Select GC end"
+                    />
+                  )}
+                />
+              </div>
+            </div>
+          )}
+        </AccordionContent>
+      </AccordionItem>
+
+      {/* ── Section 10: US Citizen Information ────────────────────────────── */}
+      <AccordionItem value="section-10">
+        <AccordionTrigger>
+          <div className="flex items-center justify-between w-full mr-4 text-left">
+            <div className="flex items-center gap-3">
+              <div className="flex size-9 items-center justify-center rounded-xl bg-blue-500/10 border border-blue-400/20 text-blue-400">
+                <ShieldCheck className="size-5" />
+              </div>
+              <div>
+                <h3 className="text-base font-semibold text-white">
+                  US Citizen (USC)
+                </h3>
+                <p className="text-xs text-slate-400">
+                  Record US Citizen status.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3" onClick={(e) => e.stopPropagation()}>
+              <Label htmlFor="usc_taken" className="text-sm text-slate-300">
+                USC Status?
+              </Label>
+              <input
+                id="usc_taken"
+                type="checkbox"
+                {...form.register("usc_taken")}
+                className="size-5 rounded border-white/20 bg-white/5 accent-sky-500 cursor-pointer"
+              />
+            </div>
+          </div>
+        </AccordionTrigger>
+        <AccordionContent className="space-y-6 pt-2">
+          {uscTaken && (
+            <div className="grid gap-5 md:grid-cols-2 rounded-2xl border border-blue-500/20 bg-blue-500/[0.03] p-5">
+              <div className="space-y-2">
+                <Label>USC Start Date</Label>
+                <Controller
+                  control={form.control}
+                  name="usc_start_date"
+                  render={({ field: { value, onChange } }) => (
+                    <MonthYearPicker
+                      value={value}
+                      onChange={onChange}
+                      placeholder="Select USC start"
+                    />
+                  )}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>USC End Date</Label>
+                <Controller
+                  control={form.control}
+                  name="usc_end_date"
+                  render={({ field: { value, onChange } }) => (
+                    <MonthYearPicker
+                      value={value}
+                      onChange={onChange}
+                      placeholder="Select USC end"
+                    />
+                  )}
+                />
+              </div>
+            </div>
+          )}
+        </AccordionContent>
+      </AccordionItem>
+
+</Accordion>
 
       {/* ── Footer Actions ────────────────────────────────────────── */}
       <div className="flex items-center justify-end gap-4 border-t border-white/10 pt-6">

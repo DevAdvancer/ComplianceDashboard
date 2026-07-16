@@ -144,6 +144,18 @@ export type Database = {
           stem_opt_taken: boolean;
           stem_opt_start_date: string | null;
           stem_opt_end_date: string | null;
+          h1b_taken: boolean;
+          h1b_start_date: string | null;
+          h1b_end_date: string | null;
+          h4_taken: boolean;
+          h4_start_date: string | null;
+          h4_end_date: string | null;
+          gc_taken: boolean;
+          gc_start_date: string | null;
+          gc_end_date: string | null;
+          usc_taken: boolean;
+          usc_start_date: string | null;
+          usc_end_date: string | null;
           created_by: string;
           created_at: string;
           updated_at: string;
