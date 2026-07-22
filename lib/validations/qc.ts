@@ -3,9 +3,9 @@ import { z } from "zod";
 const phoneRegex = /^[0-9+()\-\s]{7,20}$/;
 
 export const resumeQcExperienceSchema = z.object({
-  id: z.string().uuid().optional(),
-  company_name: z.string().min(1, "Company name is required"),
-  job_title: z.string().min(1, "Job title is required"),
+  id: z.string().optional(),
+  company_name: z.string().optional().default(""),
+  job_title: z.string().optional().default(""),
   start_date: z.string().default(""),
   end_date: z.string().default(""),
   technologies: z.string().default(""),
@@ -13,8 +13,8 @@ export const resumeQcExperienceSchema = z.object({
 });
 
 export const resumeQcOptEmployerSchema = z.object({
-  id: z.string().uuid().optional(),
-  employer_name: z.string().min(1, "Employer name is required"),
+  id: z.string().optional(),
+  employer_name: z.string().optional().default(""),
   start_date: z.string().default(""),
   end_date: z.string().default(""),
   role_or_notes: z.string().default(""),
@@ -22,8 +22,8 @@ export const resumeQcOptEmployerSchema = z.object({
 });
 
 export const resumeQcStemOptEmployerSchema = z.object({
-  id: z.string().uuid().optional(),
-  employer_name: z.string().min(1, "Employer name is required"),
+  id: z.string().optional(),
+  employer_name: z.string().optional().default(""),
   start_date: z.string().default(""),
   end_date: z.string().default(""),
   e_verify_or_notes: z.string().default(""),
@@ -69,6 +69,13 @@ export const resumeQcSchema = z.object({
   usc_taken: z.boolean().default(false),
   usc_start_date: z.string().default(""),
   usc_end_date: z.string().default(""),
+  cpt_notes: z.string().default(""),
+  opt_notes: z.string().default(""),
+  stem_opt_notes: z.string().default(""),
+  h1b_notes: z.string().default(""),
+  h4_notes: z.string().default(""),
+  gc_notes: z.string().default(""),
+  usc_notes: z.string().default(""),
   experiences: z.array(resumeQcExperienceSchema).default([]),
   opt_employers: z.array(resumeQcOptEmployerSchema).default([]),
   stem_opt_employers: z.array(resumeQcStemOptEmployerSchema).default([]),

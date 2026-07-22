@@ -156,6 +156,13 @@ export type Database = {
           usc_taken: boolean;
           usc_start_date: string | null;
           usc_end_date: string | null;
+          cpt_notes: string | null;
+          opt_notes: string | null;
+          stem_opt_notes: string | null;
+          h1b_notes: string | null;
+          h4_notes: string | null;
+          gc_notes: string | null;
+          usc_notes: string | null;
           created_by: string;
           created_at: string;
           updated_at: string;

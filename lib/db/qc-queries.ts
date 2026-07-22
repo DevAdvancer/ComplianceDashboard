@@ -154,6 +154,13 @@ export async function upsertResumeQcGraph(
     usc_taken: Boolean(values.usc_taken),
     usc_start_date: normalizeDateStr(values.usc_start_date),
     usc_end_date: normalizeDateStr(values.usc_end_date),
+    cpt_notes: values.cpt_notes?.trim() || null,
+    opt_notes: values.opt_notes?.trim() || null,
+    stem_opt_notes: values.stem_opt_notes?.trim() || null,
+    h1b_notes: values.h1b_notes?.trim() || null,
+    h4_notes: values.h4_notes?.trim() || null,
+    gc_notes: values.gc_notes?.trim() || null,
+    usc_notes: values.usc_notes?.trim() || null,
     created_by: userId,
     updated_at: new Date().toISOString(),
   };

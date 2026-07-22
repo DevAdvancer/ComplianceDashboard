@@ -138,6 +138,13 @@ export type ResumeQcInput = {
   usc_taken?: boolean;
   usc_start_date?: string;
   usc_end_date?: string;
+  cpt_notes?: string;
+  opt_notes?: string;
+  stem_opt_notes?: string;
+  h1b_notes?: string;
+  h4_notes?: string;
+  gc_notes?: string;
+  usc_notes?: string;
   experiences: ResumeQcExperienceInput[];
   opt_employers: ResumeQcOptEmployerInput[];
   stem_opt_employers: ResumeQcStemOptEmployerInput[];

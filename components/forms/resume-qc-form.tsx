@@ -27,6 +27,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { MonthYearPicker } from "@/components/ui/month-year-picker";
+import { Textarea } from "@/components/ui/textarea";
 import {
   resumeQcSchema,
   type ResumeQcSchema,
@@ -77,6 +78,13 @@ export function ResumeQcForm({
       usc_taken: Boolean(record?.usc_taken),
       usc_start_date: record?.usc_start_date ?? "",
       usc_end_date: record?.usc_end_date ?? "",
+      cpt_notes: record?.cpt_notes ?? "",
+      opt_notes: record?.opt_notes ?? "",
+      stem_opt_notes: record?.stem_opt_notes ?? "",
+      h1b_notes: record?.h1b_notes ?? "",
+      h4_notes: record?.h4_notes ?? "",
+      gc_notes: record?.gc_notes ?? "",
+      usc_notes: record?.usc_notes ?? "",
       experiences:
         record?.experiences?.length ? record.experiences.map((exp, index) => ({
           id: exp.id,
@@ -162,8 +170,13 @@ export function ResumeQcForm({
     });
   };
 
+  const onError = (errors: any) => {
+    console.error("Form validation errors:", errors);
+    toast.error("Form validation failed. Please check the required fields.");
+  };
+
   return (
-    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+    <form onSubmit={form.handleSubmit(onSubmit, onError)} className="space-y-8">
       <Accordion type="multiple" defaultValue={["section-1"]} className="space-y-6">
       {/* ── Section 1: Candidate & QC Identification ──────────────── */}
       <AccordionItem value="section-1">
@@ -369,6 +382,14 @@ export function ResumeQcForm({
                   />
                 </div>
               </div>
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="h1b_notes">H1B Notes</Label>
+                <Textarea
+                  id="h1b_notes"
+                  {...form.register("h1b_notes")}
+                  placeholder="Add any additional notes regarding H1B..."
+                />
+              </div>
             </div>
           </div>
         </AccordionContent>
@@ -557,6 +578,14 @@ export function ResumeQcForm({
                   placeholder="e.g. University Labs Inc."
                 />
               </div>
+              <div className="space-y-2 md:col-span-3">
+                <Label htmlFor="cpt_notes">CPT Notes</Label>
+                <Textarea
+                  id="cpt_notes"
+                  {...form.register("cpt_notes")}
+                  placeholder="Add any additional notes regarding CPT..."
+                />
+              </div>
             </div>
           )}
         </AccordionContent>
@@ -625,6 +654,15 @@ export function ResumeQcForm({
                     )}
                   />
                 </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="opt_notes">Overall OPT Notes</Label>
+                <Textarea
+                  id="opt_notes"
+                  {...form.register("opt_notes")}
+                  placeholder="Add any additional notes regarding OPT..."
+                />
               </div>
 
               <div className="space-y-4 pt-2">
@@ -779,6 +817,15 @@ export function ResumeQcForm({
                     )}
                   />
                 </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="stem_opt_notes">Overall STEM OPT Notes</Label>
+                <Textarea
+                  id="stem_opt_notes"
+                  {...form.register("stem_opt_notes")}
+                  placeholder="Add any additional notes regarding STEM OPT..."
+                />
               </div>
 
               <div className="space-y-4 pt-2">
@@ -998,6 +1045,14 @@ export function ResumeQcForm({
                   )}
                 />
               </div>
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="h4_notes">H4 Notes</Label>
+                <Textarea
+                  id="h4_notes"
+                  {...form.register("h4_notes")}
+                  placeholder="Add any additional notes regarding H4..."
+                />
+              </div>
             </div>
           )}
         </AccordionContent>
@@ -1064,6 +1119,14 @@ export function ResumeQcForm({
                   )}
                 />
               </div>
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="gc_notes">Green Card Notes</Label>
+                <Textarea
+                  id="gc_notes"
+                  {...form.register("gc_notes")}
+                  placeholder="Add any additional notes regarding Green Card..."
+                />
+              </div>
             </div>
           )}
         </AccordionContent>
@@ -1128,6 +1191,14 @@ export function ResumeQcForm({
                       placeholder="Select USC end"
                     />
                   )}
+                />
+              </div>
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="usc_notes">US Citizen Notes</Label>
+                <Textarea
+                  id="usc_notes"
+                  {...form.register("usc_notes")}
+                  placeholder="Add any additional notes regarding US Citizen status..."
                 />
               </div>
             </div>
